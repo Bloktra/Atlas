@@ -1,0 +1,23 @@
+services:
+  editor:
+    image: local-build
+    command: sleep infinity
+    build:
+      context: .
+    network_mode: service:db
+  db:
+    image: chainguard/mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: bloktra
+    volumes:
+      - db-data:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db
+      UPLOAD_LIMIT: 32M
+    network_mode: service:db
+      
+volumes:
+  db-data:
