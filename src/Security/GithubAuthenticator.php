@@ -48,11 +48,6 @@ class GithubAuthenticator extends OAuth2Authenticator implements AuthenticationE
 
     public function authenticate(Request $request): Passport
     {
-        $state = $request->query->get('state');
-        if (!$state || !$this->stateService->validateState('github', $state)) {
-            throw new AuthenticationException('Invalid state parameter');
-        }
-
         $client = $this->clientRegistry->getClient('github');
         $accessToken = $this->fetchAccessToken($client);
 
