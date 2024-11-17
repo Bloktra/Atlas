@@ -6,10 +6,25 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use App\Controller\MeController;
 
+#[ApiResource(
+    operations: [
+        new Get(
+            name: 'me',
+            uriTemplate: '/me',
+            controller: MeController::class,
+            read: false,
+            security: "is_granted('ROLE_USER')"
+        )
+    ],
+    security: "is_granted('ROLE_USER')"
+)]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
-#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_UUID', fields: ['uuid'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_UUID', fields: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -20,6 +35,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 180)]
     private ?string $uuid = null;
 
+    #[ORM\Column(length: 180, unique: true)]
+    private ?string $email = null;
+
     /**
      * @var list<string> The user roles
      */
@@ -29,8 +47,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var string The hashed password
      */
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?string $password = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $oAuthId = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $oAuthProvider = null;
 
     public function getId(): ?int
     {
@@ -49,6 +73,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
     /**
      * A visual identifier that represents this user.
      *
@@ -56,7 +92,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->uuid;
+        return (string) $this->email;
     }
 
     /**
@@ -105,5 +141,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function getOAuthId(): ?string
+    {
+        return $this->oAuthId;
+    }
+
+    public function setOAuthId(?string $oAuthId): static
+    {
+        $this->oAuthId = $oAuthId;
+
+        return $this;
+    }
+
+    public function getOAuthProvider(): ?string
+    {
+        return $this->oAuthProvider;
+    }
+
+    public function setOAuthProvider(?string $oAuthProvider): static
+    {
+        $this->oAuthProvider = $oAuthProvider;
+
+        return $this;
     }
 }
