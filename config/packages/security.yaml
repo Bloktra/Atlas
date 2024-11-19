@@ -1,21 +1,29 @@
 security:
+  # Use auto to let Symfony choose the best available algorithm
   password_hashers:
     Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: "auto"
+
   providers:
     app_user_provider:
       entity:
         class: App\Entity\User
         property: email
+
   firewalls:
+    # Development routes don't need security
     dev:
       pattern: ^/(_(profiler|wdt)|css|images|js)/
       security: false
+
+    # OAuth routes
     oauth:
       pattern: ^/connect/
       security: true
       lazy: true
       provider: app_user_provider
-    login:
+
+    # Authentication routes
+    auth:
       pattern: ^/auth/(login|register)
       stateless: true
       provider: app_user_provider
@@ -23,15 +31,27 @@ security:
         check_path: /auth/login
         success_handler: lexik_jwt_authentication.handler.authentication_success
         failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        username_path: email
+        password_path: password
+
+    # Main API firewall
     api:
       pattern: ^/
       stateless: true
       provider: app_user_provider
+      entry_point: jwt
       jwt: ~
+      refresh_jwt:
+        check_path: /api/token/refresh
 
   access_control:
+    # OAuth routes
     - { path: ^/connect/, roles: PUBLIC_ACCESS }
+    # Auth routes
     - { path: ^/auth/(login|register), roles: PUBLIC_ACCESS }
+    # Token refresh route
+    - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
+    # Require authentication for all other routes
     - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
 
 when@test:
